@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.27
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=elastic
+      - xpack.security.authc.api_key.enabled=true
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elastic
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.27
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://ip:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=elastic
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+
+volumes:
+  elastic_data:
+
+networks:
+  elastic:
+

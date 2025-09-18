@@ -1,0 +1,43 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  if "HDM52" in [tags] {
+    grok {
+      match => {
+        "message" => [
+          # Match "from=" lines
+          "%{SYSLOGTIMESTAMP:syslog_timestamp} %{HOSTNAME:host} sendmail\[%{NUMBER:pid}\]: %{NOTSPACE:queue_id}: from=<%{EMAILADDRESS:from_email}>, size=%{NUMBER:msg_size}, class=%{NUMBER:msg_class}, nrcpts=%{NUMBER:nrcpts}, msgid=<%{DATA:msgid}>, proto=%{WORD:proto}, daemon=%{WORD:daemon}, relay=\[%{IP:relay_ip}\]",
+          
+          # Match "to=" lines
+          "%{SYSLOGTIMESTAMP:syslog_timestamp} %{HOSTNAME:host} sendmail\[%{NUMBER:pid}\]: %{NOTSPACE:queue_id}: to=<%{EMAILADDRESS:to_email}>, delay=%{DATA:delay}, xdelay=%{DATA:xdelay}, mailer=%{WORD:mailer}, pri=%{NUMBER:pri}, relay=%{HOSTNAME:relay_host}(\[%{IP:relay_ip}\])?, dsn=%{DATA:dsn}, stat=%{WORD:status}.*",
+          
+          # Match STARTTLS lines
+          "%{SYSLOGTIMESTAMP:syslog_timestamp} %{HOSTNAME:host} sendmail\[%{NUMBER:pid}\]: STARTTLS=%{WORD:tls_role}, relay=%{HOSTNAME:relay}, version=%{DATA:tls_version}, verify=%{WORD:verify}, cipher=%{DATA:cipher}, bits=%{NUMBER:bits}/%{NUMBER:key_bits}",
+
+          # Match "did not issue MAIL" lines
+          "%{SYSLOGTIMESTAMP:syslog_timestamp} %{HOSTNAME:host} sendmail\[%{NUMBER:pid}\]: %{NOTSPACE:queue_id}: \[%{IP:relay_ip}\] %{GREEDYDATA:warning_message}"
+        ]
+      }
+    }
+
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+      target => "@timestamp"
+    }
+  }
+}
+
+output {
+  if "HDM52" in [tags] {
+    elasticsearch {
+      hosts => ["10.15.1.170:9200"]
+      index => "hdm52-mail-logs-%{+YYYY.MM.dd}"
+    }
+    stdout { codec => rubydebug }
+  }
+}
+
