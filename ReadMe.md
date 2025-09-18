@@ -19,6 +19,11 @@ Requirement from Oracle database:
 
 Make configuration as shown in this repo and you will easily connect oracle with elasticsearch.
 
+Whenever you make changes to logstash pipeline make sure you follow this process for seamless and error free deployment:
+1. First always stop and remove logstash container.
+   docker stop logstash && docker rm logstash
+2. Now deploy logstash container using above command 
+
 
 
 
