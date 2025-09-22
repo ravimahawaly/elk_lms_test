@@ -1,0 +1,15 @@
+Create a directory which will help to track the last updated value of column
+====================================================================================
+Why? 
+because ==> an error occured which was not tracking the last value and again full data of oracle injecting to elasticsearch, 
+so to solve this error we have created this file which we will mount to container to track last updated value and helps in 
+sending only incremental data to elasticsearch.
+
+#	mkdir -p /elk_stack/logstash/.logstash_meta
+#	chmod 777 /elk_stack/logstash/.logstash_meta  
+#	ls -la
+
+# command to run logstash container for this pipeline 
+
+#	docker run -d --name logstash --network elk_stack_elastic -p 5044:5044 -p 5000:5000 -v /elk_stack/logstash:/usr/share/logstash/pipeline 
+	-v /elk_stack/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml -v /elk_stack/logstash/.logstash_meta:/usr/share/logstash/.logstash_meta   docker.elastic.co/logstash/logstash:7.17.27
